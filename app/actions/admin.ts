@@ -327,7 +327,7 @@ export async function createAccessRequest(data: {
   role: string;
   notes: string;
 }): Promise<void> {
-  // Use the service-role client to insert without requiring a logged-in user
+  // Use the service-nt to insert without requiring a logged-in user
   const admin = createAdminSupabase();   // this helper already exists in admin.ts
 
   const { error } = await admin.from('access_requests').insert({
