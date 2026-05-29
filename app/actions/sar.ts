@@ -49,3 +49,24 @@ export async function submitToUIFAND(id: string, referenceNumber: string) {
   if (error) throw new Error(error.message);
   revalidatePath('/sar');
 }
+
+export async function closeSAREntry(id: string) {
+  const { supabase, orgId, role } = await getSupabaseWithAuth();
+  
+  if (!['admin', 'compliance_officer'].includes(role)) {
+    throw new Error('Insufficient permissions to close SAR');
+  }
+
+  const { error } = await supabase
+    .from('sar_entries')
+    .update({ 
+      follow_up_status: 'closed'
+      // ❌ Do NOT include 'updated_at' – the column does not exist
+    })
+    .eq('id', id)
+    .eq('org_id', orgId)
+    .eq('submitted_to_uifand', true);   // optional: only close if already submitted
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/sar');
+}

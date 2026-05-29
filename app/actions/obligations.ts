@@ -47,47 +47,69 @@ export async function getDashboardStats() {
   const today = new Date().toISOString().split('T')[0];
   const thirtyDaysOut = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+  // Fetch all required data in parallel
   const [
-    { data: obsData },
-    { data: kycData },
-    { data: sarData },
-    { data: evidenceData },
+    { data: obligations },
+    { data: kyc },
+    { data: sar },
+    { data: evidence },
   ] = await Promise.all([
-    supabase.from('obligations').select('status').eq('org_id', orgId),
+    supabase.from('obligations').select('status, due_date').eq('org_id', orgId),
     supabase.from('kyc_clients').select('review_due_date').eq('org_id', orgId),
     supabase.from('sar_entries').select('submitted_to_uifand, follow_up_status').eq('org_id', orgId),
     supabase.from('evidence_files').select('id').eq('org_id', orgId),
   ]);
 
-  const obs      = obsData ?? [];
-  const kyc      = kycData ?? [];
-  const sar      = sarData ?? [];
-  const evidence = evidenceData ?? [];
+  // --- Compute obligations with date-based overdue logic ---
+  let compliant = 0, overdue = 0, inProgress = 0, notStarted = 0;
+  for (const ob of obligations ?? []) {
+    let status = ob.status;
+    if (status !== 'compliant' && ob.due_date < today) {
+      status = 'overdue';
+    }
+    if (status === 'compliant') compliant++;
+    else if (status === 'overdue') overdue++;
+    else if (status === 'in_progress') inProgress++;
+    else if (status === 'not_started') notStarted++;
+  }
+
+  // --- KYC stats (unchanged) ---
+  const kycData = kyc ?? [];
+  const overdueKYC = kycData.filter(c => c.review_due_date < today).length;
+  const dueSoonKYC = kycData.filter(c => c.review_due_date >= today && c.review_due_date <= thirtyDaysOut).length;
+  const currentKYC = kycData.filter(c => c.review_due_date > thirtyDaysOut).length;
+
+  // --- SAR stats (unchanged) ---
+  const sarData = sar ?? [];
+  const unsubmittedSAR = sarData.filter(s => !s.submitted_to_uifand).length;
+  const pendingSAR = sarData.filter(s => s.follow_up_status === 'pending').length;
+
+  // --- Evidence stats (unchanged) ---
+  const totalEvidence = evidence?.length ?? 0;
 
   return {
     obligations: {
-      total:     obs.length,
-      compliant: obs.filter(o => o.status === 'compliant').length,
-      overdue:   obs.filter(o => o.status === 'overdue').length,
-      pending:   obs.filter(o => o.status === 'pending').length,
+      total: obligations?.length ?? 0,
+      compliant,
+      overdue,
+      pending: inProgress,   // field name kept as `pending` for backward compatibility
     },
     kyc: {
-      total:    kyc.length,
-      overdue:  kyc.filter(c => c.review_due_date < today).length,
-      due_soon: kyc.filter(c => c.review_due_date >= today && c.review_due_date <= thirtyDaysOut).length,
-      current:  kyc.filter(c => c.review_due_date > thirtyDaysOut).length,
+      total: kycData.length,
+      overdue: overdueKYC,
+      due_soon: dueSoonKYC,
+      current: currentKYC,
     },
     sar: {
-      total:       sar.length,
-      unsubmitted: sar.filter(s => !s.submitted_to_uifand).length,
-      pending:     sar.filter(s => s.follow_up_status === 'pending').length,
+      total: sarData.length,
+      unsubmitted: unsubmittedSAR,
+      pending: pendingSAR,
     },
     evidence: {
-      total: evidence.length,
+      total: totalEvidence,
     },
   };
 }
-
 const REGULATION_COLORS: Record<string, string> = {
   'AML Law 14/2017':       '#dc2626',
   'MiFID II (Law 7/2024)': '#2563eb',

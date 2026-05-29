@@ -49,44 +49,28 @@ function EvidenceUploadModal({
     return map[ext] || ext;
   }
 
+  
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedFile) { setError('Please select a file.'); return; }
-    const fd = new FormData(e.currentTarget);
-    const uploadedBy = fd.get('uploadedBy') as string;
-    if (!uploadedBy.trim()) { setError('Please enter your name.'); return; }
+  e.preventDefault();
+  if (!selectedFile) {
+    setError('Please select a file.');
+    return;
+  }
 
-    setError('');
-    startTransition(async () => {
-      try {
-        const supabase = createClient();
-        const storagePath = `${Date.now()}_${selectedFile.name.replace(/\s/g, '_')}`;
-        setUploadProgress(20);
+  const fd = new FormData(e.currentTarget);
+  fd.append('file', selectedFile);
 
-        const { error: storageError } = await supabase.storage
-          .from('evidence')
-          .upload(storagePath, selectedFile);
-
-        setUploadProgress(70);
-
-        await uploadEvidenceFile({
-          name: selectedFile.name,
-          regulation: obligation.regulation,
-          obligationId: obligation.id,
-          fileType: getFileType(selectedFile),
-          fileSize: formatBytes(selectedFile.size),
-          uploadedBy,
-          storagePath: storageError ? undefined : storagePath,
-        });
-
-        setUploadProgress(100);
-        setTimeout(() => { onUploaded(); onClose(); }, 300);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Upload failed.');
-        setUploadProgress(0);
-      }
-    });
-  };
+  setError('');
+  startTransition(async () => {
+    try {
+      await uploadEvidenceFile(fd);
+      onUploaded();
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Upload failed.');
+    }
+  });
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

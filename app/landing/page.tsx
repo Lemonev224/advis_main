@@ -274,9 +274,9 @@ export default function LandingPage() {
       <section id="platform" className="border-y border-gray-200 bg-white px-4 py-24">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-sm border border-gray-200 bg-[#F8FAFB] p-8 shadow-sm">
+            <div className="rounded-sm border border-gray-200 bg-[#F8FAFB] p-8 shadow-sm min-w-0">
               <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">{t(locale, 'landing.platformLabel')}</div>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900">{t(locale, 'landing.platformTitle')}</h2>
+              <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 break-words">{t(locale, 'landing.platformTitle')}</h2>
               <p className="mt-4 text-base leading-7 text-gray-600">{t(locale, 'landing.platformSub')}</p>
               <div className="mt-8 space-y-4">
                 {positioningBlocks.map((block) => (
@@ -287,13 +287,13 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <div className="rounded-sm border border-gray-200 bg-white shadow-sm">
+            <div className="rounded-sm border border-gray-200 bg-white shadow-sm min-w-0 overflow-hidden">
               <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-5 py-3">
                 <div className="text-sm font-bold text-gray-800">{t(locale, 'landing.tableHeader')}</div>
                 <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500">{t(locale, 'landing.tableLabel')}</span>
               </div>
-              <div className="p-0 overflow-x-auto">
-                <table className="w-full text-sm text-left">
+              <div className="w-full overflow-x-auto">
+  <table className="w-full min-w-[500px] text-sm text-left">
                   <thead>
                     <tr className="border-b border-gray-200 bg-white text-[11px] uppercase tracking-wider text-gray-500">
                       <th className="px-5 py-3 font-bold">{t(locale, 'landing.tableColArea')}</th>
@@ -318,47 +318,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="px-4 py-24">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 max-w-3xl">
-            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">{t(locale, 'landing.pricingLabel')}</div>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{t(locale, 'landing.pricingTitle')}</h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-gray-600">{t(locale, 'landing.pricingSub')}</p>
-          </div>
-          <div className="grid gap-5 lg:grid-cols-3">
-            {plans.map((plan) => (
-              <div key={plan.name} className={`rounded-sm border bg-white p-7 shadow-sm ${plan.highlighted ? 'border-gray-800 ring-1 ring-gray-800' : 'border-gray-200'}`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">{plan.name}</div>
-                    <div className="mt-3 flex items-end gap-1">
-                      <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                      {plan.period ? <span className="pb-1 text-sm text-gray-500">{plan.period}</span> : null}
-                    </div>
-                  </div>
-                  {plan.highlighted ? (
-                    <span className="rounded-sm bg-gray-800 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-                      {t(locale, 'landing.recommended')}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-4 text-sm leading-6 text-gray-600">{plan.desc}</p>
-                <ul className="mt-6 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm text-gray-700">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-cyan-700" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/request-access" className={`mt-7 inline-flex w-full items-center justify-center gap-2 rounded-sm px-4 py-3 text-sm font-bold shadow-sm transition ${plan.highlighted ? 'bg-gray-800 text-white hover:bg-gray-900' : 'border border-gray-300 bg-white text-gray-800 hover:bg-gray-50'}`}>
-                  {plan.cta} <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+     
 
       {/* FAQ */}
       <section id="faq" className="border-t border-gray-200 bg-white px-4 py-24">

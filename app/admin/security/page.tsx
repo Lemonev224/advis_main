@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function SecurityPage() {
   const [overview, securityEvents, activeSessions] = await Promise.all([
     getSecurityOverview(),
-    getSecurityEvents(30),
+    getSecurityEvents(),
     getActiveSessions(),
   ])
 

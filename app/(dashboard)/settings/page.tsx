@@ -9,6 +9,7 @@ import type { OrgUser } from '@/app/actions/admin'
 import { useLocale } from '@/lib/supabase/locale-context'
 import { t } from '@/lib/supabase/i18n'
 
+
 const inputCls    = 'w-full h-9 px-3 text-sm text-slate-800 bg-white border border-slate-300 rounded-[2px] focus:outline-none focus:border-slate-500 transition-colors'
 const readOnlyCls = 'w-full h-9 px-3 text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-[2px] cursor-not-allowed'
 const labelCls    = 'text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block'
@@ -47,19 +48,20 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const notificationDefaults = [
-  { id: 'obligation_overdue', label: 'Obligation overdue',     description: 'When a regulatory obligation passes its due date',       email: true,  inApp: true  },
-  { id: 'kyc_expiring',       label: 'KYC review due',         description: 'When a client KYC review is due within 30 days',         email: true,  inApp: true  },
-  { id: 'sar_pending',        label: 'SAR pending submission', description: 'When a SAR has not been submitted to UIFAND within 48h', email: true,  inApp: true  },
-  { id: 'evidence_missing',   label: 'Evidence missing',       description: 'When an obligation has no evidence attached',            email: false, inApp: true  },
-  { id: 'audit_report',       label: 'Audit report generated', description: 'When a new audit report is exported',                   email: true,  inApp: false },
-  { id: 'team_changes',       label: 'Team changes',           description: 'When a user is added or removed from the workspace',     email: false, inApp: true  },
-]
+  { id: 'obligation_overdue', label: 'Obligation overdue',     description: 'When a regulatory obligation passes its due date',       inApp: true },
+  { id: 'kyc_expiring',       label: 'KYC review due',         description: 'When a client KYC review is due within 30 days',         inApp: true },
+  { id: 'sar_pending',        label: 'SAR pending submission', description: 'When a SAR has not been submitted to UIFAND within 48h', inApp: true },
+  { id: 'evidence_missing',   label: 'Evidence missing',       description: 'When an obligation has no evidence attached',            inApp: true },
+  { id: 'audit_report',       label: 'Audit report generated', description: 'When a new audit report is exported',                   inApp: false },
+  { id: 'team_changes',       label: 'Team changes',           description: 'When a user is added or removed from the workspace',     inApp: true },
+];
 
 // ── Team Tab ──────────────────────────────────────────────────────────────────
 
 function InviteModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [isPending, start] = useTransition()
   const [error, setError] = useState('')
+
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -219,7 +221,7 @@ const tabs = [
   { id: 'organisation',  label: 'Organisation', icon: Building2 },
   { id: 'team',          label: 'Team',         icon: Users },
   { id: 'security',      label: 'Security',     icon: Shield },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
+
 ]
 
 export default function SettingsPage() {
@@ -354,31 +356,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Notifications */}
-      {activeTab === 'notifications' && (
-        <div className="space-y-6 max-w-2xl">
-          <Section title="Alert Preferences">
-            {notifs.map(n => (
-              <div key={n.id} className="flex items-center gap-4 px-4 py-3">
-                <div className="flex-1">
-                  <div className="text-sm font-semibold text-slate-800">{n.label}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{n.description}</div>
-                </div>
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Email</span>
-                    <Toggle value={n.email} onChange={v => setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, email: v } : x))} />
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">In-app</span>
-                    <Toggle value={n.inApp} onChange={v => setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, inApp: v } : x))} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </Section>
-        </div>
-      )}
+
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { AuthNav } from '@/components/auth-nav'
 import { useLocale } from '@/lib/supabase/locale-context'
 import { t } from '@/lib/supabase/i18n'
 import { activateDemoSession } from '@/app/actions/demo'
+import { signInAndRecord } from '@/app/actions/auth'
 
 function LoadingScreen() {
   return (

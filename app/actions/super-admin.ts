@@ -222,7 +222,9 @@ export async function provisionBank(input: {
                     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://advisorly.app'}/auth/confirm`,
                 }
             )
-            if (inviteError) { errors.push(`${user.email}: ${inviteError.message}`); continue }
+            if (inviteError) {     
+                errors.push(`${user.email}: ${inviteError.message}`); continue 
+            }
 
             const { error: profileError } = await admin
                 .from('user_profiles')
@@ -251,29 +253,95 @@ export async function provisionBank(input: {
 }
 
 export async function addUserToOrg(input: {
-    orgId: string
-    email: string
-    fullName: string
-    role: 'admin' | 'compliance_officer' | 'read_only'
+    orgId: string;
+    email: string;
+    fullName: string;
+    role: 'admin' | 'compliance_officer' | 'read_only';
 }): Promise<void> {
-    await assertSuperAdmin()
-    const admin = createAdminClient()
+    await assertSuperAdmin();
+    const admin = createAdminClient();
 
-    const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(
-        input.email,
-        {
-            data: { full_name: input.fullName },
-            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://advisorly.app'}/auth/confirm`,
-        }
-    )
-    if (inviteError) throw new Error(inviteError.message)
+    // 1. Verify organisation exists
+    const { data: org, error: orgError } = await admin
+        .from('organisations')
+        .select('id')
+        .eq('id', input.orgId)
+        .single();
 
-    const { error } = await admin
+    if (orgError || !org) {
+        throw new Error(`Organisation with ID ${input.orgId} does not exist`);
+    }
+
+    // 2. Check if user already exists in auth
+    const { data: existingUsers, error: listError } = await admin.auth.admin.listUsers();
+    if (listError) throw new Error(`Failed to list users: ${listError.message}`);
+
+    const existingUser = existingUsers.users.find(u => u.email === input.email);
+    if (existingUser) {
+        // User already exists – reject to prevent cross-organisation accounts
+        throw new Error(`User with email ${input.email} already exists in the system. Users cannot belong to multiple organisations.`);
+    }
+
+    // 3. User does not exist – create a new user
+    const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+        email: input.email,
+        email_confirm: true,      // Mark email as confirmed – they will set password via magic link
+        user_metadata: { full_name: input.fullName },
+    });
+
+    if (createError) {
+        console.error('Create user error:', createError);
+        throw new Error(`Failed to create user: ${createError.message}`);
+    }
+
+    const userId = newUser.user.id;
+
+    // 4. Send a magic link / password reset email so the user can set a password
+    // We need a regular Supabase client (with anon key) to send the email.
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseAnon = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    const { error: magicError } = await supabaseAnon.auth.resetPasswordForEmail(input.email, {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://advisorly.app'}/auth/confirm?next=/auth/reset-password`,
+    });
+
+    if (magicError) {
+        console.warn('Failed to send magic link, user can request password reset manually:', magicError.message);
+        // Not a critical error – the user can still use "Forgot password"
+    }
+
+    // 5. Check if user already has a profile in this org (should not happen, but double-check)
+    const { data: existingProfile } = await admin
         .from('user_profiles')
-        .insert({ id: invited.user.id, org_id: input.orgId, role: input.role, full_name: input.fullName })
+        .select('id')
+        .eq('id', userId)
+        .eq('org_id', input.orgId)
+        .single();
 
-    if (error) throw new Error(error.message)
-    revalidatePath('/admin/banks')
+    if (existingProfile) {
+        throw new Error('User is already a member of this organisation');
+    }
+
+    // 6. Create the profile
+    const { error: profileError } = await admin
+        .from('user_profiles')
+        .insert({
+            id: userId,
+            org_id: input.orgId,
+            role: input.role,
+            full_name: input.fullName,
+        });
+
+    if (profileError) {
+        console.error('Profile insert error:', profileError);
+        throw new Error(`Database error saving user profile: ${profileError.message}`);
+    }
+
+    revalidatePath('/admin/banks');
+    revalidatePath(`/admin/banks/${input.orgId}`);
 }
 
 export async function removeUser(userId: string): Promise<void> {

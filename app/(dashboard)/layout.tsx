@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { DEMO_COOKIE_NAME, DEMO_COOKIE_VALUE } from '@/app/actions/demo-constants'
 import TopBar from '@/components/layout/TopBar'
 
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
   const isDemoSession = cookieStore.get(DEMO_COOKIE_NAME)?.value === DEMO_COOKIE_VALUE

@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { useLocale } from '@/lib/supabase/locale-context';
 import { t } from '@/lib/supabase/i18n';
 import { createClient } from '@/lib/supabase/client';
+import { clearDemoSession } from '@/app/actions/demo';
 
 const navItemDefs = [
   { href: '/',             icon: LayoutDashboard, key: 'nav.dashboard',    badge: null },
@@ -36,11 +37,13 @@ export default function Sidebar({ orgName, userRole }: Props) {
     .join('')
     .slice(0, 4) || orgName.slice(0, 3).toUpperCase();
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/landing');
-  };
+const handleLogout = async () => {
+  const supabase = createClient();
+  await supabase.auth.signOut();      // clears real Supabase session
+  await clearDemoSession();           // deletes demo cookie if it exists
+  router.push('/landing');
+  router.refresh();                   // optional, forces middleware re-check
+};
 
   return (
     <>

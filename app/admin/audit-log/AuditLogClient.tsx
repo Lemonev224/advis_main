@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { Search, Filter, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
 import { getAuditLog } from '@/app/actions/super-admin-security'
-import type { AuditEntry } from '@/app/actions/super-admin-security'
+import type { AuditEntry } from '@/app/actions/super-admin-security' // now it exists
 import type { SuperOrg } from '@/app/actions/super-admin'
 
 const actionColors: Record<string, string> = {

@@ -11,6 +11,7 @@ import type { User } from '@supabase/supabase-js'
 import { useLocale } from '@/lib/supabase/locale-context'
 import { t } from '@/lib/supabase/i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { clearDemoSession } from '@/app/actions/demo';
 
 const navItems = [
   { href: '/',              translationKey: 'nav.dashboard' },
@@ -132,13 +133,13 @@ export default function TopBar() {
   const displayName = user?.user_metadata?.full_name ?? user?.email ?? 'User'
   const institution = user?.user_metadata?.institution_name ?? 'Compliance Workspace'
 
-  const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/landing')
-    router.refresh()
-  }
-
+const  handleSignOut = async () => {
+  const supabase = createClient();
+  await supabase.auth.signOut();      // clears real Supabase session
+  await clearDemoSession();           // deletes demo cookie if it exists
+  router.push('/landing');
+  router.refresh();                   // optional, forces middleware re-check
+};
   const urgentCount = notifications.filter(n => n.urgent).length
 
   const notifIcon: Record<NotificationItem['type'], React.ReactNode> = {
@@ -148,7 +149,7 @@ export default function TopBar() {
   }
 
   return (
-    <header className="bg-[#2C3E50] text-[#ECF0F1] sticky top-0 z-50 shadow-sm flex flex-col font-sans">
+    <header className="bg-[#2C3E50] text-[#ECF0F1] sticky top-0 z-50 shadow-sm flex flex-col font-sans print:hidden">
       <div className="flex items-center justify-between px-4 h-12 border-b border-white/10 min-w-0">
         <div className="flex items-center gap-4">
           <Link href="/" className="font-bold text-lg tracking-wider text-white">

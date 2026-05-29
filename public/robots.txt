@@ -1,0 +1,16 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /obligations
+Disallow: /evidence
+Disallow: /kyc
+Disallow: /sar
+Disallow: /audit-report
+Disallow: /settings
+Disallow: /auth
+
+# Host
+Host: https://advisorly.tech
+
+# Sitemaps
+Sitemap: https://advisorly.tech/sitemap.xml

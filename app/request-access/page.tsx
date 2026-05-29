@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ArrowLeft, ArrowRight, Loader2, UserPlus, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { AuthNav } from '@/components/auth-nav'
-import { createAccessRequest } from '@/app/actions/evidence'
+import { createAccessRequest } from '@/app/actions/admin'
 import { useLocale } from '@/lib/supabase/locale-context'
 import { t } from '@/lib/supabase/i18n'
 

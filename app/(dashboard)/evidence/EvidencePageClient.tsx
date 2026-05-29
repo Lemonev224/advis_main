@@ -75,57 +75,27 @@ function UploadModal({
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedFile) { setError(t(locale, 'evidence.fileStar')); return; }
+ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  if (!selectedFile) {
+    setError(t(locale, 'evidence.fileStar'));
+    return;
+  }
 
-    const fd = new FormData(e.currentTarget);
-    const obligationId = fd.get('obligationId') as string;
-    const uploadedBy = fd.get('uploadedBy') as string;
-    const selectedObligation = obligations.find(o => o.id === obligationId);
+  const fd = new FormData(e.currentTarget);
+  fd.append('file', selectedFile);
 
-    if (!obligationId || !uploadedBy.trim() || !selectedObligation) {
-      setError('All fields are required.');
-      return;
+  setError('');
+  startTransition(async () => {
+    try {
+      await uploadEvidenceFile(fd);
+      onUploaded();
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Upload failed.');
     }
-
-    setError('');
-    startTransition(async () => {
-      try {
-        const supabase = createClient();
-        const storagePath = `${Date.now()}_${selectedFile.name.replace(/\s/g, '_')}`;
-
-        setUploadProgress(20);
-        const { error: storageError } = await supabase.storage
-          .from('evidence')
-          .upload(storagePath, selectedFile);
-
-        setUploadProgress(70);
-
-        if (storageError) {
-          console.warn('Storage upload failed, recording metadata only:', storageError.message);
-        }
-
-        setUploadProgress(90);
-
-        await uploadEvidenceFile({
-          name: selectedFile.name,
-          regulation: selectedObligation.regulation,
-          obligationId,
-          fileType: getFileType(selectedFile),
-          fileSize: formatBytes(selectedFile.size),
-          uploadedBy,
-          storagePath: storageError ? undefined : storagePath,
-        });
-
-        setUploadProgress(100);
-        setTimeout(() => { onUploaded(); onClose(); }, 300);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Upload failed.');
-        setUploadProgress(0);
-      }
-    });
-  };
+  });
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -237,17 +207,20 @@ function FileRow({ file, onDelete }: { file: EvidenceRow; onDelete: (id: string)
     });
   };
 
-  const handleDownload = () => {
-    if (!file.storage_path) {
-      alert('This is a seeded demo file with no actual file stored. Real uploads will be downloadable.');
-      return;
-    }
-    startDownloadTransition(async () => {
+const handleDownload = () => {
+  if (!file.storage_path) {
+    alert('This demo file has no actual file stored. Only real uploads are downloadable.');
+    return;
+  }
+  startDownloadTransition(async () => {
+    try {
       const url = await getSignedDownloadUrl(file.storage_path!);
       window.open(url, '_blank');
-    });
-  };
-
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Download failed');
+    }
+  });
+};
   return (
     <tr className={clsx('hover:bg-slate-50 transition-colors group', isDeleting && 'opacity-40')}>
       <td className="py-2.5 px-3 w-8">{fileTypeIcon(file.file_type)}</td>

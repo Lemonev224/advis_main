@@ -316,3 +316,29 @@ export async function getAllOrgs(): Promise<Organisation[]> {
 
   return withCounts
 }
+
+// app/actions/admin.ts
+
+// ─── Public Access Request (no authentication needed) ─────────────────────────
+export async function createAccessRequest(data: {
+  fullName: string;
+  email: string;
+  institution: string;
+  role: string;
+  notes: string;
+}): Promise<void> {
+  // Use the service-role client to insert without requiring a logged-in user
+  const admin = createAdminSupabase();   // this helper already exists in admin.ts
+
+  const { error } = await admin.from('access_requests').insert({
+    full_name: data.fullName,
+    email: data.email,
+    institution_name: data.institution,
+    role: data.role,
+    notes: data.notes,
+    status: 'pending',
+    submitted_at: new Date().toISOString(),
+  });
+
+  if (error) throw new Error(error.message);
+}

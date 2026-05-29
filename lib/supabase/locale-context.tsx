@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import type { Locale } from './i18n'
 
 interface LocaleContextValue {
@@ -13,15 +13,23 @@ const LocaleContext = createContext<LocaleContextValue>({
   setLocale: () => {},
 })
 
+function getLocaleCookie(): Locale {
+  const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/)
+  const cookieVal = match?.[1] as Locale
+  if (cookieVal && ['en', 'es', 'ca'].includes(cookieVal)) return cookieVal
+  return 'ca'
+}
+
 export function LocaleProvider({ children }: { children: React.ReactNode }): JSX.Element {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof document !== 'undefined') {
-      const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]+)/)
-      const cookieVal = match?.[1] as Locale
-      if (cookieVal && ['en', 'es', 'ca'].includes(cookieVal)) return cookieVal
-    }
-    return 'ca'
-  })
+  // Always start with 'ca' to match the server render
+  const [locale, setLocaleState] = useState<Locale>('ca')
+  // After mount, sync to the actual cookie value
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setLocaleState(getLocaleCookie())
+    setMounted(true)
+  }, [])
 
   const setLocale = (l: Locale) => {
     setLocaleState(l)

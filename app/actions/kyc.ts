@@ -37,17 +37,31 @@ export async function addKYCClient(input: {
   documentsMissing: string[];
 }) {
   const { supabase, orgId } = await getSupabaseWithAuth();
+
+  // Check if account_ref already exists for this org
+  const { data: existing } = await supabase
+    .from('kyc_clients')
+    .select('account_ref')
+    .eq('account_ref', input.accountRef)
+    .eq('org_id', orgId)
+    .maybeSingle();
+
+  if (existing) {
+    throw new Error('A client with this account reference already exists. Please use a unique reference.');
+  }
+
   const { error } = await supabase.from('kyc_clients').insert({
-    org_id:               orgId,
-    name:                 input.name,
-    account_ref:          input.accountRef,
-    risk_tier:            input.riskTier,
-    onboarding_date:      input.onboardingDate,
-    review_due_date:      input.reviewDueDate,
-    documents_received:   input.documentsReceived,
-    documents_missing:    input.documentsMissing,
-    status:               'current',
+    org_id: orgId,
+    name: input.name,
+    account_ref: input.accountRef,
+    risk_tier: input.riskTier,
+    onboarding_date: input.onboardingDate,
+    review_due_date: input.reviewDueDate,
+    documents_received: input.documentsReceived,
+    documents_missing: input.documentsMissing,
+    status: 'current',
   });
+
   if (error) throw new Error(error.message);
   revalidatePath('/kyc');
 }
@@ -57,9 +71,9 @@ export async function markClientReviewed(id: string) {
   const { error } = await supabase
     .from('kyc_clients')
     .update({
-      status:        'current',
-      last_reviewed: new Date().toISOString().split('T')[0],
-      updated_at:    new Date().toISOString(),
+      status: 'current',
+      last_reviewed_at: new Date().toISOString(),   
+      updated_at: new Date().toISOString(),
     })
     .eq('id', id)
     .eq('org_id', orgId);
