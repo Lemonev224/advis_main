@@ -9,10 +9,10 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.png",
   },
-  title: "Advisorly",
+  title: "Advisorly | Compliance Software for Financial Institutions",
   description:
-    "Advisorly is an Andorra-based compliance SaaS platform helping financial institutions manage regulatory workflows, compliance tasks, and operational risk.",
-};
+    "Compliance software for banks and regulated financial institutions in Andorra. Manage regulatory obligations, evidence, KYC reviews, and audit readiness with Advisorly.",
+}
 
 export default function RootLayout({
   children,
