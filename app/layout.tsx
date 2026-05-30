@@ -6,12 +6,13 @@ import Providers from '@/components/layout/Providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-    icons: {
-    icon: '/icon.png',
+  icons: {
+    icon: "/icon.png",
   },
-  title: 'Advisorly',
-  description: 'Compliance OS for financial institutions',
-}
+  title: "Advisorly",
+  description:
+    "Advisorly is an Andorra-based compliance SaaS platform helping financial institutions manage regulatory workflows, compliance tasks, and operational risk.",
+};
 
 export default function RootLayout({
   children,
